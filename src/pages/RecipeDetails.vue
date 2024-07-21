@@ -3,7 +3,7 @@
     <div class="q-pa-md">
       <h1>{{ recipe.title }}</h1>
       <p>{{ recipe.description }}</p>
-      <div v-for="(step, index) in recipe.steps" :key="index">
+      <div v-for="(step, index) in recipe.steps" :key="index" class="q-mt-md">
         <q-card>
           <q-card-section>
             <q-item>

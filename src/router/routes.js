@@ -3,21 +3,20 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: '', redirect: '/home' }, // Redirect to home
+      { path: 'home', component: () => import('pages/HomePage.vue') },
       { path: 'vision', component: () => import('pages/VisionPage.vue') },
       { path: 'recipes', component: () => import('pages/RecipePage.vue') },
-      { path: 'recipes/:id', component: () => import('pages/RecipeDetails.vue') },
-      { path: 'profile', component: () => import('pages/UserProfile.vue') },
+      { path: 'recipe/:id', component: () => import('pages/RecipeDetails.vue') },
       { path: 'settings', component: () => import('pages/SettingsPage.vue') }
     ]
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
+  // Catch-all route for 404
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')
   }
 ]
 
-export default routes
+export default routes;

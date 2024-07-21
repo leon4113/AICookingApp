@@ -2,18 +2,27 @@
   <q-page>
     <div class="q-pa-md">
       <h1>Scan Ingredients</h1>
-      <q-uploader @added="onFileChange" />
-      <q-img v-if="image" :src="image" />
-      <div v-for="(item, index) in ingredients" :key="index">
-        {{ item.class }}
+      <q-uploader
+        label="Upload or capture an image"
+        accept="image/*"
+        @added="onFileChange"
+        auto-upload
+      />
+      <q-img v-if="image" :src="image" class="full-width" />
+      <div v-if="ingredients.length" class="q-mt-md">
+        <h3>Detected Ingredients:</h3>
+        <q-list bordered>
+          <q-item v-for="(ingredient, index) in ingredients" :key="index">
+            <q-item-section>{{ ingredient.class }}</q-item-section>
+          </q-item>
+        </q-list>
+        <q-btn @click="navigateToRecipes" label="View Recipes" color="primary" class="q-mt-md" />
       </div>
     </div>
   </q-page>
 </template>
 
 <script>
-import { Camera, CameraResultType } from '@capacitor/camera';
-
 export default {
   data() {
     return {
@@ -22,28 +31,21 @@ export default {
     };
   },
   methods: {
-    async onFileChange(files) {
+    onFileChange(files) {
       const file = files[0];
       const reader = new FileReader();
       reader.onload = (e) => {
         this.image = e.target.result;
-        const imgElement = new Image();
-        imgElement.src = this.image;
-        imgElement.onload = async () => {
-          this.ingredients = await this.detectIngredients(imgElement);
-        };
+        // TODO: Send image to backend for recognition
+        this.ingredients = [
+          { class: 'Tomato', score: 0.98 },
+          { class: 'Cucumber', score: 0.95 }
+        ]; // Mocked data
       };
       reader.readAsDataURL(file);
     },
-    async detectIngredients(imgElement) {
-      // Implement the ingredient detection logic
-      // This could involve sending the image to the backend server
-      // or using a TensorFlow.js model in the frontend
-      // For now, let's assume a static response
-      return [
-        { class: 'Tomato', score: 0.98 },
-        { class: 'Cucumber', score: 0.95 }
-      ];
+    navigateToRecipes() {
+      this.$router.push({ path: '/recipes', query: { ingredients: this.ingredients.map(i => i.class).join(',') } });
     }
   }
 }
