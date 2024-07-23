@@ -1,17 +1,36 @@
 import axios from 'axios';
-import { ROBOFLOW_API_KEY, ROBOFLOW_MODEL, ROBOFLOW_VERSION } from 'src/config/roboflow';
 
-export async function detectIngredients(imageBase64) {
-  const url = `https://detect.roboflow.com/${ROBOFLOW_MODEL}/${ROBOFLOW_VERSION}?api_key=${ROBOFLOW_API_KEY}`;
-  try {
-    const response = await axios.post(
-      url,
-      { image: imageBase64 },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-    return response.data.predictions.map(prediction => prediction.class);
-  } catch (error) {
-    console.error('Error detecting ingredients:', error);
-    throw error;
+const ROBOTFLOW_API_KEY = 'KEhx89W4ih75J6MJwZFq';  // Ensure to replace this with your actual API key
+const MODEL_ID_VERSION = 'food-ingredients-detection-6ce7j/1';  // Replace with your model ID and version
+
+const roboflowService = {
+  detectIngredients: async (imageFile) => {
+    try {
+      const imageBase64 = await toBase64(imageFile);
+      const response = await axios({
+        method: 'POST',
+        url: `https://detect.roboflow.com/${MODEL_ID_VERSION}`,
+        params: {
+          api_key: ROBOTFLOW_API_KEY
+        },
+        data: imageBase64,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error detecting ingredients:', error);
+      throw error;
+    }
   }
-}
+};
+
+const toBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result.split(',')[1]);
+  reader.onerror = error => reject(error);
+});
+
+export default roboflowService;
