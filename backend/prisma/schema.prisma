@@ -15,17 +15,17 @@ generator client {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  username String  @unique
-  password String
-  recipes  Recipe[]
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  password    String
+  preferences String?
+  recipes     Recipe[]
 }
 
 model Recipe {
-  id          String   @id @default(uuid())
-  user_id     String
+  id          Int    @id @default(autoincrement())
+  userId      Int
+  user        User   @relation(fields: [userId], references: [id])
   ingredients String
   steps       String
-  created_at  DateTime @default(now())
-  user        User     @relation(fields: [user_id], references: [id])
 }

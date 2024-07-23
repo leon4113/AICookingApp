@@ -13,7 +13,7 @@
         <h3>Detected Ingredients:</h3>
         <q-list bordered>
           <q-item v-for="(ingredient, index) in ingredients" :key="index">
-            <q-item-section>{{ ingredient.class }}</q-item-section>
+            <q-item-section>{{ ingredient }}</q-item-section>
           </q-item>
         </q-list>
         <q-btn @click="navigateToRecipes" label="View Recipes" color="primary" class="q-mt-md" />
@@ -23,6 +23,8 @@
 </template>
 
 <script>
+import { detectIngredients } from 'src/services/roboflowService';
+
 export default {
   data() {
     return {
@@ -34,18 +36,19 @@ export default {
     onFileChange(files) {
       const file = files[0];
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         this.image = e.target.result;
-        // TODO: Send image to backend for recognition
-        this.ingredients = [
-          { class: 'Tomato', score: 0.98 },
-          { class: 'Cucumber', score: 0.95 }
-        ]; // Mocked data
+        try {
+          const ingredients = await detectIngredients(e.target.result.split(',')[1]); // remove base64 header
+          this.ingredients = ingredients;
+        } catch (error) {
+          console.error('Error detecting ingredients:', error);
+        }
       };
       reader.readAsDataURL(file);
     },
     navigateToRecipes() {
-      this.$router.push({ path: '/recipes', query: { ingredients: this.ingredients.map(i => i.class).join(',') } });
+      this.$router.push({ path: '/recipes', query: { ingredients: this.ingredients.join(',') } });
     }
   }
 }
