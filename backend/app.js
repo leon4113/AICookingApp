@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const axios = require('axios');
+const OpenAI = require("openai");
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -11,9 +11,11 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 const SECRET_KEY = process.env.SECRET_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+const openai = new OpenAI;
 
 app.use(bodyParser.json());
+
 
 // Register endpoint
 app.post('/register', async (req, res) => {
@@ -103,37 +105,41 @@ app.put('/user/:id/change-password', async (req, res) => {
 
 // Generate recipe endpoint
 app.post('/generate-recipe', async (req, res) => {
-    const { userId, ingredients } = req.body;
-    try {
-        const response = await axios.post(
-            'https://api.openai.com/v1/completions',
-            {
-                prompt: `Generate a recipe using these ingredients: ${ingredients.join(', ')}`,
-                max_tokens: 150,
-                n: 1,
-                stop: null,
-                temperature: 0.7
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
+  const { userId, ingredients } = req.body;
+  try {
+      const gptResponse = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [
+              {"role": "system", "content": "You are a world-class 3 star Michelin star chef."},
+              {"role": "user", "content": `Generate a recipe using these ingredients: ${ingredients.join(', ')}`}
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          top_p: 1,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+      });
 
-        const recipeText = response.data.choices[0].text.trim();
-        const recipe = await prisma.recipe.create({
-            data: {
-                userId: userId,
-                ingredients: JSON.stringify(ingredients),
-                steps: recipeText
-            }
-        });
-        res.json({ recipe });
-    } catch (error) {
-        res.status(500).json({ message: 'Error generating recipe', error: error.message });
-    }
+      // Debugging: Log the full response
+      console.log('OpenAI Response:', gptResponse);
+
+      if (gptResponse && gptResponse.choices && gptResponse.choices.length > 0) {
+          const recipeText = gptResponse.choices[0].message.content.trim();
+          const recipe = await prisma.recipe.create({
+              data: {
+                  userId: userId,
+                  ingredients: JSON.stringify(ingredients),
+                  steps: recipeText
+              }
+          });
+          res.json({ recipe });
+      } else {
+          res.status(500).json({ message: 'Invalid response from OpenAI API' });
+      }
+  } catch (error) {
+      console.error('Error generating recipe:', error);
+      res.status(500).json({ message: 'Error generating recipe', error: error.message });
+  }
 });
 
 // Get user recipes endpoint
