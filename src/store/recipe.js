@@ -11,6 +11,7 @@ const actions = {
     try {
       const response = await api.post('/generate-recipe', { userId, ingredients });
       state.generatedRecipe = response.data.recipe;
+      state.recipes = [response.data.recipe]; 
       return response.data.recipe;
     } catch (error) {
       console.error('Generate recipe error:', error);

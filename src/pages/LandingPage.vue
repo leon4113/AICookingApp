@@ -1,12 +1,12 @@
 <template>
-  <q-page>
+  <q-page class="flex flex-center">
     <div class="q-pa-md">
       <h1>Welcome to the AI Culinary Assistant</h1>
       <div class="q-mt-md">
-        <q-btn to="/vision" label="Scan Ingredients" icon="camera" color="primary" push />
+        <q-btn to="/login" label="Login" color="primary" push />
       </div>
       <div class="q-mt-md">
-        <q-btn to="/recipes" label="View Recipes" icon="restaurant_menu" color="secondary" push />
+        <q-btn to="/signup" label="Sign Up" color="secondary" push />
       </div>
     </div>
   </q-page>
@@ -14,6 +14,6 @@
 
 <script>
 export default {
-  name: 'HomePage',
+  name: 'LandingPage',
 }
 </script>
