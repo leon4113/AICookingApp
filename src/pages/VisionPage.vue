@@ -1,57 +1,55 @@
 <template>
-  <q-page padding>
-    <q-uploader
-      label="Upload an image"
-      @added="onImageAdded"
-      accept="image/*"
-    />
-    <div v-if="detectedIngredients.length">
-      <h3>Detected Ingredients:</h3>
-      <ul>
-        <li v-for="ingredient in detectedIngredients" :key="ingredient.class">{{ ingredient.class }}</li>
-      </ul>
-      <q-btn @click="generateRecipe" label="Generate Recipe" color="primary" />
+  <q-page>
+    <div class="q-pa-md">
+      <h1>Scan Ingredients</h1>
+      <q-uploader
+        label="Upload or capture an image"
+        accept="image/*"
+        @added="onFileChange"
+        auto-upload
+      />
+      <q-img v-if="image" :src="image" class="full-width" />
+      <div v-if="ingredients.length" class="q-mt-md">
+        <h3>Detected Ingredients:</h3>
+        <q-list bordered>
+          <q-item v-for="(ingredient, index) in ingredients" :key="index">
+            <q-item-section>{{ ingredient }}</q-item-section>
+          </q-item>
+        </q-list>
+        <q-btn @click="navigateToRecipes" label="View Recipes" color="primary" class="q-mt-md" />
+      </div>
     </div>
   </q-page>
 </template>
 
 <script>
-import { ref } from 'vue';
-import roboflowService from 'src/services/roboflowService';
-import recipeStore from 'src/store/recipe';
-import userStore from 'src/store/user';
-import { useRouter } from 'vue-router';
+import { detectIngredients } from 'src/services/roboflowService';
 
 export default {
-  setup() {
-    const detectedIngredients = ref([]);
-    const router = useRouter();
-
-    const onImageAdded = async (files) => {
-      try {
-        const image = files[0];
-        const detectionResult = await roboflowService.detectIngredients(image);
-        detectedIngredients.value = detectionResult.predictions;
-      } catch (error) {
-        console.error('Error detecting ingredients:', error);
-      }
-    };
-
-    const generateRecipe = async () => {
-      try {
-        const ingredients = detectedIngredients.value.map(ingredient => ingredient.class);
-        await recipeStore.actions.generateRecipe(userStore.state.user.id, ingredients);
-        router.push('/recipes');
-      } catch (error) {
-        console.error('Error generating recipe:', error);
-      }
-    };
-
+  data() {
     return {
-      onImageAdded,
-      detectedIngredients,
-      generateRecipe,
+      image: null,
+      ingredients: []
     };
+  },
+  methods: {
+    onFileChange(files) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        this.image = e.target.result;
+        try {
+          const ingredients = await detectIngredients(e.target.result.split(',')[1]); // remove base64 header
+          this.ingredients = ingredients;
+        } catch (error) {
+          console.error('Error detecting ingredients:', error);
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    navigateToRecipes() {
+      this.$router.push({ path: '/recipes', query: { ingredients: this.ingredients.join(',') } });
+    }
   }
-};
+}
 </script>

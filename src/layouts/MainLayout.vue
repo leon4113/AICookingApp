@@ -10,7 +10,7 @@
         </q-toolbar-title>
       </q-toolbar>
 
-      <q-tabs v-if="!isLandingPage" align="left">
+      <q-tabs align="left">
         <q-route-tab to="/home" label="Home" icon="home" />
         <q-route-tab to="/vision" label="Scan" icon="camera" />
         <q-route-tab to="/recipes" label="Recipes" icon="restaurant_menu" />
@@ -25,18 +25,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
-
 export default {
-  name: 'MainLayout',
-  setup() {
-    const route = useRoute();
-    const isLandingPage = computed(() => ['/', '/login', '/signup', '/landing'].includes(route.path));
-
-    return {
-      isLandingPage
-    };
-  }
+  name: 'MainLayout'
 }
 </script>

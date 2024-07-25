@@ -1,10 +1,9 @@
 import axios from 'axios';
 
-const ROBOTFLOW_API_KEY = '';
-const MODEL_ID_VERSION = '';
+const ROBOTFLOW_API_KEY = 'KEhx89W4ih75J6MJwZFq';
+const MODEL_ID_VERSION = 'food-ingredients-detection-6ce7j/1';
 
 
-// Service to interact with the Roboflow API
 const roboflowService = {
   detectIngredients: async (imageFile) => {
     try {
@@ -28,7 +27,6 @@ const roboflowService = {
   }
 };
 
-// Helper function to convert a file to base64
 const toBase64 = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.readAsDataURL(file);

@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const OpenAI = require("openai");
 const dotenv = require('dotenv');
-const cors = require('cors');
 
 dotenv.config();
 
@@ -17,8 +16,6 @@ const openai = new OpenAI;
 
 app.use(bodyParser.json());
 
-// Enable CORS for all routes
-app.use(cors({ origin: 'http://localhost:9000' }));
 
 // Register endpoint
 app.post('/register', async (req, res) => {
