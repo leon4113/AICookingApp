@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const OpenAI = require("openai");
 const dotenv = require('dotenv');
+const cors = require('cors');
 
 dotenv.config();
 
@@ -15,7 +16,23 @@ const SECRET_KEY = process.env.SECRET_KEY;
 const openai = new OpenAI;
 
 app.use(bodyParser.json());
+app.use(cors());
 
+// Middleware to authenticate and extract userId from token
+const authenticateToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+      if (err) return res.sendStatus(403);
+      req.userId = user.userId;
+      next();
+  });
+};
+
+app.get('/protected', authenticateToken, (req, res) => {
+  res.json({ message: 'This is a protected route', userId: req.userId });
+});
 
 // Register endpoint
 app.post('/register', async (req, res) => {
