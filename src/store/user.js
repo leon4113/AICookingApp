@@ -1,5 +1,6 @@
 import { reactive } from 'vue';
 import api from 'src/api';
+import { LocalStorage } from 'quasar';
 
 const state = reactive({
   user: null,
@@ -7,41 +8,39 @@ const state = reactive({
 });
 
 const actions = {
-  async register(username, password) {
-    try {
-      const response = await api.post('/register', { username, password });
-      return response.data;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
-  },
   async login(username, password) {
     try {
       const response = await api.post('/login', { username, password });
       state.user = response.data.user;
       state.token = response.data.token;
-      api.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
-      return response.data;
+      LocalStorage.set('user', state.user);
+      LocalStorage.set('token', state.token);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   },
+  async register(username, password) {
+    try {
+      const response = await api.post('/register', { username, password });
+      state.user = response.data.user;
+      state.token = response.data.token;
+      LocalStorage.set('user', state.user);
+      LocalStorage.set('token', state.token);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  },
+  loadUserFromLocalStorage() {
+    state.user = LocalStorage.getItem('user');
+    state.token = LocalStorage.getItem('token');
+  },
   logout() {
     state.user = null;
     state.token = null;
-    delete api.defaults.headers.common['Authorization'];
-  },
-  async fetchUserProfile() {
-    try {
-      const response = await api.get(`/user/${state.user.id}`);
-      state.user = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Fetch user profile error:', error);
-      throw error;
-    }
+    LocalStorage.remove('user');
+    LocalStorage.remove('token');
   },
 };
 

@@ -127,7 +127,7 @@ app.post('/generate-recipe', async (req, res) => {
       const gptResponse = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
-              {"role": "system", "content": "You are a world-class 3 star Michelin star chef."},
+              {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef. And now you are focused more on home cooked based in south east asia region"},
               {"role": "user", "content": `Generate a recipe using these ingredients: ${ingredients.join(', ')}`}
           ],
           max_tokens: 1000,

@@ -37,9 +37,10 @@ export default {
 
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.userId;
-        console.log('User ID:', userId);
+        this.$q.localStorage.setItem('userId', userId);
+        console.log('from local storage:', this.$q.localStorage.getItem('userId'));
 
-        this.$router.push('/home'); // Redirect to home page after successful login
+        this.$router.push('/home');
       } catch (error) {
         console.error('Login error:', error);
       }
@@ -47,13 +48,6 @@ export default {
   },
   setup() {
     const $q = useQuasar();
-
-
-    // return {
-    //   username,
-    //   password,
-    //   login,
-    // };
   },
 };
 

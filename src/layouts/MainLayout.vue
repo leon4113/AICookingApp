@@ -1,3 +1,4 @@
+<!-- MainLayout.vue -->
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header elevated class="bg-primary text-white">
@@ -10,7 +11,7 @@
         </q-toolbar-title>
       </q-toolbar>
 
-      <q-tabs align="left">
+      <q-tabs align="left" v-if="showTabs">
         <q-route-tab to="/home" label="Home" icon="home" />
         <q-route-tab to="/vision" label="Scan" icon="camera" />
         <q-route-tab to="/recipes" label="Recipes" icon="restaurant_menu" />
@@ -25,7 +26,17 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
 export default {
-  name: 'MainLayout'
-}
+  setup() {
+    const route = useRoute();
+    const showTabs = computed(() => !['/login', '/signup'].includes(route.path));
+
+    return {
+      showTabs,
+    };
+  },
+};
 </script>
