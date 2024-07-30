@@ -1,0 +1,13 @@
+{
+  "name": "cook",
+  "version": "0.0.1",
+  "description": "A cooking app that combines computer vision and NLP",
+  "author": "leo <ln777764@gmail.com>",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^6.1.1",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
