@@ -3,7 +3,7 @@
     <div class="q-pa-md">
       <h1>Recipes</h1>
       <div v-for="(recipe, index) in recipes" :key="index" class="q-mt-md">
-        <q-card @click="viewRecipe(recipe.id)" class="q-mb-md">
+        <q-card @click="viewRecipe(recipe)" class="q-mb-md">
           <q-card-section>
             <q-item>
               <q-item-section>
@@ -19,18 +19,28 @@
 </template>
 
 <script>
+import api from 'src/api';
 export default {
   data() {
     return {
-      recipes: [
-        { id: 1, title: 'Tomato Soup', description: 'A delicious tomato soup.' },
-        { id: 2, title: 'Cucumber Salad', description: 'A refreshing cucumber salad.' }
-      ]
+      recipes: JSON.parse(sessionStorage.getItem('recipes')) || []
     };
   },
   methods: {
-    viewRecipe(id) {
-      this.$router.push({ path: `/recipe/${id}` });
+    async viewRecipe(recipes) {
+      try {
+        const response = await api.post('/generate-recipe-details', {
+          userId: this.$q.localStorage.getItem('userId'),
+          title: recipes.title,
+          ingredients: JSON.parse(recipes.ingredients)
+        });
+        console.log('success');
+        sessionStorage.setItem('recipeDetails', JSON.stringify(response.data.recipe));
+
+        this.$router.push({ name: 'recipeDetails' });
+      } catch (error) {
+        console.error('Error fetching recipe details:', error);
+      }
     }
   }
 }

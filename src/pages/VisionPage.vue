@@ -19,17 +19,20 @@
 import { ref } from 'vue';
 import roboflowService from 'src/services/roboflowService';
 import api from 'src/api';
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
 
 export default {
   setup() {
     const detectedIngredients = ref([]);
+    const $q = useQuasar();
+    const router = useRouter();
 
     const onImageAdded = async (files) => {
       try {
         const image = files[0];
         const detectionResult = await roboflowService.detectIngredients(image);
         detectedIngredients.value = detectionResult.predictions;
-        console.log('Detected Ingredients:', detectedIngredients.value);
       } catch (error) {
         console.error('Error detecting ingredients:', error);
       }
@@ -38,18 +41,20 @@ export default {
     const generateRecipe = async () => {
       try {
         const ingredients = detectedIngredients.value.map(ingredient => ingredient.class);
-        console.log('Ingredients:', ingredients);  // Log the processed ingredients array
+        console.log('Ingredients:', ingredients);
         //ensure userId is int type
 
-        const userId = $q.localStorage.getItem(userId);
+        const rawUserId = $q.localStorage.getItem('userId');
+        const userId = parseInt(rawUserId);
         console.log('User ID:', userId);
         if (!userId) {
           throw new Error('User is not logged in');
         }
 
         const response = await api.post('/generate-recipe', { userId, ingredients });
-        console.log('Recipe generated:', response.data.recipe);  // Log the response
-        this.$router.push({ path: '/recipes', params: { recipes: response.data.recipe } });
+        console.log('Recipe generated:', response.data.recipes);  // Log the response
+        sessionStorage.setItem('recipes', JSON.stringify(response.data.recipes));
+        router.push({ name: 'recipes'});
       } catch (error) {
         console.error('Error generating recipe:', error);
       }

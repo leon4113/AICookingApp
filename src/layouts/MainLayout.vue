@@ -32,7 +32,7 @@ import { useRoute } from 'vue-router';
 export default {
   setup() {
     const route = useRoute();
-    const showTabs = computed(() => !['/login', '/signup'].includes(route.path));
+    const showTabs = computed(() => !['/loginpage', '/landing', '/signup'].includes(route.path));
 
     return {
       showTabs,

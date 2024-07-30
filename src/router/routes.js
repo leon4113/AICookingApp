@@ -8,8 +8,8 @@ const routes = [
       { path: 'loginpage', component: () => import('pages/LoginPage.vue') },
       { path: 'signup', component: () => import('pages/SignupPage.vue') },
       { path: 'vision', component: () => import('pages/VisionPage.vue') },
-      { path: 'recipes', component: () => import('pages/RecipePage.vue') },
-      { path: 'recipe/:id', component: () => import('pages/RecipeDetails.vue') },
+      { path: 'recipes', component: () => import('pages/RecipePage.vue'), name: 'recipes' },
+      { path: 'recipeDetails', component: () => import('pages/RecipeDetails.vue'), name: 'recipeDetails' },
       { path: 'settings', component: () => import('pages/SettingsPage.vue') },
       { path: 'Landing', component: () => import('pages/LandingPage.vue') },
     ]

@@ -2,9 +2,11 @@
   <q-page class="q-pa-md">
     <q-card class="q-mb-md">
       <q-card-section>
-        <q-form @submit.prevent="register">
+        <div class="text-h6">Sign Up</div>
+        <q-form @submit.prevent="signup">
           <q-input v-model="username" label="Username" required />
           <q-input v-model="password" label="Password" type="password" required />
+          <q-input v-model="confirmPassword" label="Confirm Password" type="password" required />
           <q-btn type="submit" label="Sign Up" color="primary" class="q-mt-md" />
         </q-form>
       </q-card-section>
@@ -13,29 +15,44 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import { useUserStore } from '../store/user';
+import api from 'src/api';
+import { useQuasar } from 'quasar';
 
 export default {
-  setup() {
-    const username = ref('');
-    const password = ref('');
-    const userStore = useUserStore();
-
-    const register = async () => {
-      try {
-        await userStore.register(username.value, password.value);
-        this.$router.push('/home'); // Redirect to home page after successful registration
-      } catch (error) {
-        console.error('Registration error:', error);
-      }
-    };
-
+  data() {
     return {
-      username,
-      password,
-      register,
+      username: '',
+      password: '',
+      confirmPassword: ''
     };
+  },
+  methods: {
+    async signup() {
+      if (this.password !== this.confirmPassword) {
+        this.$q.notify({ type: 'negative', message: 'Passwords do not match!' });
+        return;
+      }
+
+      try {
+        const response = await api.post('/register', {
+          username: this.username,
+          password: this.password
+        });
+
+        if (response.data.success) {
+          this.$q.notify({ type: 'positive', message: 'Signup successful!' });
+          this.$router.push('/loginpage'); // Redirect to login page after successful signup
+        } else {
+          this.$q.notify({ type: 'negative', message: response.data.message });
+        }
+      } catch (error) {
+        console.error('Signup error:', error);
+        this.$q.notify({ type: 'negative', message: 'Signup failed. Please try again.' });
+      }
+    }
+  },
+  setup() {
+    const $q = useQuasar();
   },
 };
 </script>
