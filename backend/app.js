@@ -38,16 +38,20 @@ app.get('/protected', authenticateToken, (req, res) => {
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
+        const existingUser = await prisma.user.findUnique({ where: { username } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await prisma.user.create({
+        const newuser = await prisma.user.create({
             data: {
                 username,
                 password: hashedPassword
             }
         });
-        res.status(201).json({ message: 'User registered successfully', user });
+        res.json({ success: true, user: newuser  });
     } catch (error) {
-        res.status(500).json({ message: 'Error registering user', error: error.message });
+        res.status(500).json({ success: false, message: 'Error registering user', error: error.message });
     }
 });
 
@@ -69,55 +73,71 @@ app.post('/login', async (req, res) => {
 
 // Fetch user profile
 app.get('/user/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: Number(id) }
-        });
-        if (user) {
-            res.json(user);
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching user data', error: error.message });
+  const userId = parseInt(req.params.id);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ message: 'Error fetching user data', error: error.message });
+  }
 });
 
 // Update user profile
 app.put('/user/:id', async (req, res) => {
-    const { id } = req.params;
-    const { username, preferences } = req.body;
-    try {
-        const updatedUser = await prisma.user.update({
-            where: { id: Number(id) },
-            data: { username, preferences }
-        });
-        res.json(updatedUser);
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating user profile', error: error.message });
-    }
+  const userId = parseInt(req.params.id);
+  const { username } = req.body;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { username }
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ message: 'Error updating user profile', error: error.message });
+  }
 });
 
 // Change user password
 app.put('/user/:id/change-password', async (req, res) => {
-    const { id } = req.params;
-    const { oldPassword, newPassword } = req.body;
-    try {
-        const user = await prisma.user.findUnique({ where: { id: Number(id) } });
-        if (user && await bcrypt.compare(oldPassword, user.password)) {
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await prisma.user.update({
-                where: { id: Number(id) },
-                data: { password: hashedPassword }
-            });
-            res.json({ message: 'Password changed successfully' });
-        } else {
-            res.status(400).json({ message: 'Incorrect old password' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Error changing password', error: error.message });
+  const userId = parseInt(req.params.id);
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect old password' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ message: 'Error changing password', error: error.message });
+  }
 });
 
 // Generate recipe endpoint
@@ -128,7 +148,49 @@ app.post('/generate-recipe', async (req, res) => {
           model: 'gpt-3.5-turbo',
           messages: [
               {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef. And now you are focused more on home cooked based in south east asia region"},
-              {"role": "user", "content": `Generate a recipe using these ingredients: ${ingredients.join(', ')}`}
+              {"role": "user", "content": `list 2 to 4 recipes (name only) that primarily use these ingredients: ${ingredients.join(', ')}`}
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          top_p: 1,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+      });
+
+      // Debugging: Log the full response
+      console.log('OpenAI Response:', gptResponse);
+
+      if (gptResponse && gptResponse.choices && gptResponse.choices.length > 0) {
+          const recipesText = gptResponse.choices[0].message.content.trim();
+          const recipeTitles = recipesText.split('\n').filter(title => title); // Splitting by new lines
+
+          // Constructing recipe objects
+          const recipes = recipeTitles.map((title, index) => ({
+              id: index + 1,
+              userId: userId,
+              title: title.trim(),
+              description: "Click to see the full recipe",
+              ingredients: JSON.stringify(ingredients)
+          }));
+
+          res.json({ recipes });
+      } else {
+          res.status(500).json({ message: 'Invalid response from OpenAI API' });
+      }
+  } catch (error) {
+      console.error('Error generating recipe:', error);
+      res.status(500).json({ message: 'Error generating recipe', error: error.message });
+  }
+});
+
+app.post('/generate-recipe-details', async (req, res) => {
+  const { userId, title, ingredients } = req.body;
+  try {
+      const gptResponse = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [
+              {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef. And now you are focused more on home cooked based in south east asia region"},
+              {"role": "user", "content": `Provide a detailed recipe for the following dish: ${title} with these ingredients: ${ingredients.join(', ')}`}
           ],
           max_tokens: 1000,
           temperature: 0.7,
@@ -142,48 +204,58 @@ app.post('/generate-recipe', async (req, res) => {
 
       if (gptResponse && gptResponse.choices && gptResponse.choices.length > 0) {
           const recipeText = gptResponse.choices[0].message.content.trim();
+
+          // Save the detailed recipe in the database
           const recipe = await prisma.recipe.create({
               data: {
                   userId: userId,
+                  title: title,
                   ingredients: JSON.stringify(ingredients),
                   steps: recipeText
               }
           });
+
           res.json({ recipe });
       } else {
           res.status(500).json({ message: 'Invalid response from OpenAI API' });
       }
   } catch (error) {
-      console.error('Error generating recipe:', error);
-      res.status(500).json({ message: 'Error generating recipe', error: error.message });
+      console.error('Error generating recipe details:', error);
+      res.status(500).json({ message: 'Error generating recipe details', error: error.message });
   }
 });
 
-// Get user recipes endpoint
-app.get('/user/:userId/recipes', async (req, res) => {
-    const { userId } = req.params;
-    try {
-        const recipes = await prisma.recipe.findMany({ where: { userId: Number(userId) } });
-        res.json({ recipes });
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching recipes', error: error.message });
-    }
+// Fetch user's past recipes
+app.get('/user/:id/recipes', async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  try {
+    const recipes = await prisma.recipe.findMany({
+      where: { userId: userId }
+    });
+
+    res.json({ recipes });
+  } catch (error) {
+    console.error('Error fetching user recipes:', error);
+    res.status(500).json({ message: 'Error fetching user recipes', error: error.message });
+  }
 });
 
-// Delete user recipe
-app.delete('/user/:id/recipes/:recipeId', async (req, res) => {
-    const { id, recipeId } = req.params;
-    try {
-        await prisma.recipe.deleteMany({
-            where: {
-                id: Number(recipeId),
-                userId: Number(id)
-            }
-        });
-        res.json({ message: 'Recipe deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting recipe', error: error.message });
-    }
+// Delete a recipe
+app.delete('/user/:userId/recipes/:recipeId', async (req, res) => {
+  const userId = parseInt(req.params.userId);
+  const recipeId = parseInt(req.params.recipeId);
+
+  try {
+    await prisma.recipe.delete({
+      where: { id: recipeId, userId: userId }
+    });
+
+    res.json({ message: 'Recipe deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting recipe:', error);
+    res.status(500).json({ message: 'Error deleting recipe', error: error.message });
+  }
 });
 
 // Start server
