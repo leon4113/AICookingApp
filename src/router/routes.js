@@ -3,7 +3,7 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', redirect: '/Landing' }, // Redirect to login by default
+      { path: '', redirect: '/landing' }, // Redirect to login by default
       { path: 'home', component: () => import('pages/HomePage.vue') },
       { path: 'loginpage', component: () => import('pages/LoginPage.vue') },
       { path: 'signup', component: () => import('pages/SignupPage.vue') },
@@ -11,7 +11,7 @@ const routes = [
       { path: 'recipes', component: () => import('pages/RecipePage.vue'), name: 'recipes' },
       { path: 'recipeDetails', component: () => import('pages/RecipeDetails.vue'), name: 'recipeDetails' },
       { path: 'settings', component: () => import('pages/SettingsPage.vue') },
-      { path: 'Landing', component: () => import('pages/LandingPage.vue') },
+      { path: 'landing', component: () => import('pages/LandingPage.vue') },
     ]
   },
   {

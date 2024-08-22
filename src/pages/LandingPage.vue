@@ -12,9 +12,3 @@
     </q-card>
   </q-page>
 </template>
-
-<script>
-export default {
-  name: 'LandingPage'
-}
-</script>
