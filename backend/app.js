@@ -16,7 +16,11 @@ const SECRET_KEY = process.env.SECRET_KEY;
 const openai = new OpenAI;
 
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL,  // Replace this with your actual frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // Middleware to authenticate and extract userId from token
 const authenticateToken = (req, res, next) => {
@@ -258,7 +262,13 @@ app.delete('/user/:userId/recipes/:recipeId', async (req, res) => {
   }
 });
 
+// Default route
+app.get('/', (req, res) => {
+  res.send('Welcome to the Recipe Generator API');
+});
+
 // Start server
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+const PORT = process.env.PORT || 3000; // Use the port Heroku provides or default to 3000
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
