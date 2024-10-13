@@ -151,8 +151,8 @@ app.post('/generate-recipe', async (req, res) => {
       const gptResponse = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
-              {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef. And now you are focused more on home cooked based in south east asia region"},
-              {"role": "user", "content": `list 2 to 4 recipes (name only) that primarily use these ingredients: ${ingredients.join(', ')}`}
+              {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef and now you are focused more on suggesting home cooked recipes based in south east asia region"},
+              {"role": "user", "content": `list 2 to 4 recipes (recipe name only) that primarily use these ingredients: ${ingredients.join(', ')}`}
           ],
           max_tokens: 1000,
           temperature: 0.7,
@@ -193,7 +193,7 @@ app.post('/generate-recipe-details', async (req, res) => {
       const gptResponse = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
-              {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef. And now you are focused more on home cooked based in south east asia region"},
+              {"role": "system", "content": "You are a retired world-class 3 star Michelin star chef and now you are focused more on suggesting home cooked recipes based in south east asia region"},
               {"role": "user", "content": `Provide a detailed recipe for the following dish: ${title} with these ingredients: ${ingredients.join(', ')}`}
           ],
           max_tokens: 1000,

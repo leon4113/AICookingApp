@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const ROBOTFLOW_API_KEY = 'KEhx89W4ih75J6MJwZFq';
+const ROBOTFLOW_API_KEY = process.env.ROBOTFLOW_API_KEY;
 const MODEL_ID_VERSION = 'food-ingredients-detection-6ce7j/1';
 
 
